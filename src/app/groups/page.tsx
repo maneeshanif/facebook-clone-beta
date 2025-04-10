@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
-import { FaSearch, FaUsers, FaLock, FaGlobe, FaPlus, FaEllipsisH } from 'react-icons/fa';
+import { FaSearch, FaUsers, FaLock, FaGlobe, FaPlus, FaEllipsisH, FaThumbsUp, FaComment, FaShare, FaTimes, FaCamera } from 'react-icons/fa';
 
 interface Group {
   id: string;
@@ -41,15 +41,16 @@ export default function GroupsPage() {
   const [activeTab, setActiveTab] = useState<'discover' | 'your-groups'>('your-groups');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [groupPosts, setGroupPosts] = useState<Post[]>([]);
-  
+
   useEffect(() => {
     const fetchGroups = async () => {
       setIsLoading(true);
-      
+
       // In a real app, we would fetch from Supabase
       // For now, we'll use mock data
-      
+
       // Mock groups data
       const mockGroups: Group[] = [
         {
@@ -119,19 +120,19 @@ export default function GroupsPage() {
           is_member: false,
         },
       ];
-      
+
       setGroups(mockGroups);
       setIsLoading(false);
     };
-    
+
     fetchGroups();
   }, []);
-  
+
   useEffect(() => {
     if (selectedGroup) {
       // In a real app, we would fetch posts for the selected group from Supabase
       // For now, we'll use mock data
-      
+
       // Mock posts data
       const mockPosts: Post[] = [
         {
@@ -174,11 +175,11 @@ export default function GroupsPage() {
           },
         },
       ];
-      
+
       setGroupPosts(mockPosts);
     }
   }, [selectedGroup]);
-  
+
   const formatMembersCount = (count: number): string => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M members`;
@@ -188,12 +189,12 @@ export default function GroupsPage() {
       return `${count} members`;
     }
   };
-  
+
   const formatTimeAgo = (timestamp: string): string => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffSeconds < 60) {
       return `${diffSeconds} seconds ago`;
     } else if (diffSeconds < 3600) {
@@ -210,7 +211,7 @@ export default function GroupsPage() {
       return `${Math.floor(diffSeconds / 31536000)} years ago`;
     }
   };
-  
+
   const getPrivacyIcon = (privacy: string) => {
     switch (privacy) {
       case 'public':
@@ -223,44 +224,44 @@ export default function GroupsPage() {
         return <FaGlobe className="text-green-600" />;
     }
   };
-  
+
   const handleJoinGroup = (groupId: string) => {
     // In a real app, we would update the membership in Supabase
     // For now, we'll just update the local state
-    setGroups(prev => 
-      prev.map(group => 
-        group.id === groupId 
-          ? { ...group, is_member: true, members_count: group.members_count + 1 } 
+    setGroups(prev =>
+      prev.map(group =>
+        group.id === groupId
+          ? { ...group, is_member: true, members_count: group.members_count + 1 }
           : group
       )
     );
   };
-  
+
   const handleLeaveGroup = (groupId: string) => {
     // In a real app, we would update the membership in Supabase
     // For now, we'll just update the local state
-    setGroups(prev => 
-      prev.map(group => 
-        group.id === groupId 
-          ? { ...group, is_member: false, members_count: group.members_count - 1 } 
+    setGroups(prev =>
+      prev.map(group =>
+        group.id === groupId
+          ? { ...group, is_member: false, members_count: group.members_count - 1 }
           : group
       )
     );
-    
+
     // If the selected group is the one being left, go back to the groups list
     if (selectedGroup?.id === groupId) {
       setSelectedGroup(null);
     }
   };
-  
+
   const filteredGroups = groups.filter(group => {
     const matchesTab = activeTab === 'discover' ? !group.is_member : group.is_member;
     const matchesSearch = group.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           group.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesTab && matchesSearch;
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -271,31 +272,32 @@ export default function GroupsPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
-      <div className="container mx-auto flex flex-1 px-4 py-6">
-        <Sidebar className="sticky top-16 hidden w-1/5 lg:block" />
-        
-        <div className="w-full lg:w-4/5">
+
+      <div className="container mx-auto flex flex-1 flex-col lg:flex-row px-4 py-6">
+        <Sidebar className="sticky top-16 hidden w-full lg:w-1/5 lg:block" />
+
+        <div className="w-full px-0 sm:px-4 lg:w-4/5 lg:pl-4">
           {selectedGroup ? (
             <div>
               {/* Group header */}
               <div className="mb-6 overflow-hidden rounded-lg bg-white shadow">
                 <div className="relative h-48 w-full">
                   {selectedGroup.cover_image ? (
-                    <img
+                    <Image
                       src={selectedGroup.cover_image}
                       alt={selectedGroup.name}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <div className="h-full w-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
                   )}
                 </div>
-                
+
                 <div className="p-4">
                   <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
                     <div>
@@ -310,7 +312,7 @@ export default function GroupsPage() {
                         {formatMembersCount(selectedGroup.members_count)} • {selectedGroup.posts_count} posts
                       </p>
                     </div>
-                    
+
                     <div className="mt-4 flex md:mt-0">
                       {selectedGroup.is_member ? (
                         <button
@@ -335,13 +337,13 @@ export default function GroupsPage() {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="mt-4">
                     <p className="text-gray-700">{selectedGroup.description}</p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Group posts */}
               <div className="space-y-4">
                 {selectedGroup.is_member && (
@@ -360,7 +362,7 @@ export default function GroupsPage() {
                     </div>
                   </div>
                 )}
-                
+
                 {groupPosts.map(post => (
                   <div key={post.id} className="rounded-lg bg-white p-4 shadow">
                     <div className="mb-3 flex items-center justify-between">
@@ -391,27 +393,30 @@ export default function GroupsPage() {
                         <FaEllipsisH />
                       </button>
                     </div>
-                    
+
                     <div className="mb-3">
                       <p className="whitespace-pre-line">{post.content}</p>
                     </div>
-                    
+
                     {post.image_url && (
                       <div className="mb-3">
-                        <img
-                          src={post.image_url}
-                          alt="Post image"
-                          className="w-full rounded-lg"
-                        />
+                        <div className="relative h-64 w-full">
+                          <Image
+                            src={post.image_url}
+                            alt="Post image"
+                            fill
+                            className="rounded-lg object-contain"
+                          />
+                        </div>
                       </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between border-b border-t border-gray-200 py-2 text-sm text-gray-500">
                       <div>
                         {post.likes_count} likes • {post.comments_count} comments
                       </div>
                     </div>
-                    
+
                     <div className="mt-2 flex">
                       <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
                         <FaThumbsUp className="mr-2" />
@@ -428,7 +433,7 @@ export default function GroupsPage() {
                     </div>
                   </div>
                 ))}
-                
+
                 {groupPosts.length === 0 && (
                   <div className="rounded-lg bg-white p-6 text-center shadow">
                     <p className="text-gray-500">No posts in this group yet.</p>
@@ -443,15 +448,18 @@ export default function GroupsPage() {
                   <h1 className="text-2xl font-bold">Groups</h1>
                   <p className="text-gray-600">Connect with people who share your interests</p>
                 </div>
-                
+
                 <div className="mt-4 md:mt-0">
-                  <button className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
+                  <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                  >
                     <FaPlus className="mr-2" />
                     Create New Group
                   </button>
                 </div>
               </div>
-              
+
               <div className="mb-6 flex flex-col gap-4 md:flex-row">
                 <div className="relative flex-1">
                   <input
@@ -464,7 +472,7 @@ export default function GroupsPage() {
                   <FaSearch className="absolute left-3 top-3 text-gray-500" />
                 </div>
               </div>
-              
+
               <div className="mb-6 flex border-b border-gray-300">
                 <button
                   onClick={() => setActiveTab('your-groups')}
@@ -487,7 +495,7 @@ export default function GroupsPage() {
                   Discover
                 </button>
               </div>
-              
+
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredGroups.length > 0 ? (
                   filteredGroups.map(group => (
@@ -500,10 +508,11 @@ export default function GroupsPage() {
                         onClick={() => setSelectedGroup(group)}
                       >
                         {group.cover_image ? (
-                          <img
+                          <Image
                             src={group.cover_image}
                             alt={group.name}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         ) : (
                           <div className="h-full w-full bg-gradient-to-r from-blue-400 to-blue-600"></div>
@@ -524,7 +533,7 @@ export default function GroupsPage() {
                             {formatMembersCount(group.members_count)}
                           </p>
                         </div>
-                        
+
                         {group.is_member ? (
                           <button
                             onClick={() => handleLeaveGroup(group.id)}
@@ -556,6 +565,83 @@ export default function GroupsPage() {
             </div>
           )}
         </div>
+
+        {/* Create Group Modal */}
+        {showCreateForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50 p-4">
+            <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 sm:p-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold">Create New Group</h2>
+                <button
+                  onClick={() => setShowCreateForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Group Name</label>
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter group name"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Privacy</label>
+                  <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none">
+                    <option value="public">Public - Anyone can see who's in the group and what they post</option>
+                    <option value="closed">Closed - Anyone can find the group, but only members can see posts</option>
+                    <option value="secret">Secret - Only members can find the group and see posts</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    rows={3}
+                    placeholder="What is this group about?"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Cover Photo</label>
+                  <label className="flex cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-gray-300 p-6 hover:bg-gray-50">
+                    <input type="file" className="hidden" accept="image/*" />
+                    <div className="text-center">
+                      <FaCamera className="mx-auto h-8 w-8 text-gray-400" />
+                      <p className="mt-1 text-sm text-gray-500">Click to add a cover photo</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(false)}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert('Your group has been created! (This is a demo)');
+                      setShowCreateForm(false);
+                    }}
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    Create Group
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

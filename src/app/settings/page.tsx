@@ -1,143 +1,62 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 import { FaUser, FaLock, FaBell, FaGlobe, FaShieldAlt, FaQuestionCircle } from 'react-icons/fa';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/store';
+import { updateUserProfile } from '@/redux/userSlice';
 
-interface Profile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  email: string;
-  avatar_url: string | null;
-  bio: string | null;
-}
+// Using Profile type from Redux
 
 export default function SettingsPage() {
-  const router = useRouter();
+  const dispatch = useDispatch();
+  const { profile, isLoading } = useSelector((state: RootState) => state.user);
   const [activeTab, setActiveTab] = useState('general');
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [bio, setBio] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  
+
   useEffect(() => {
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        router.push('/login');
-        return;
-      }
-      
-      try {
-        // Try to get profile from profiles table
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (error) {
-          // If profile doesn't exist in the table, create a basic one from auth data
-          const userData = session.user.user_metadata || {};
-          
-          const newProfile = {
-            id: session.user.id,
-            first_name: userData.first_name || '',
-            last_name: userData.last_name || '',
-            full_name: userData.full_name || session.user.email?.split('@')[0] || 'User',
-            email: session.user.email || '',
-            avatar_url: null,
-            bio: null,
-          };
-          
-          setProfile(newProfile);
-          setFirstName(newProfile.first_name);
-          setLastName(newProfile.last_name);
-          setBio(newProfile.bio || '');
-        } else {
-          setProfile(data);
-          setFirstName(data.first_name);
-          setLastName(data.last_name);
-          setBio(data.bio || '');
-        }
-      } catch (error) {
-        console.error('Error fetching profile:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchProfile();
-  }, [router]);
-  
+    if (profile) {
+      setFirstName(profile.first_name || '');
+      setLastName(profile.last_name || '');
+      setBio(profile.bio || '');
+    }
+  }, [profile]);
+
   const handleSaveProfile = async () => {
     if (!profile) return;
-    
+
     setIsSaving(true);
     setSuccessMessage('');
-    
+
     try {
-      // Update user metadata in auth
-      await supabase.auth.updateUser({
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          full_name: `${firstName} ${lastName}`,
-        }
-      });
-      
-      // Try to update profile in profiles table
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: profile.id,
-          first_name: firstName,
-          last_name: lastName,
-          full_name: `${firstName} ${lastName}`,
-          email: profile.email,
-          bio: bio,
-          updated_at: new Date().toISOString(),
-        });
-      
-      if (error) {
-        console.error('Error updating profile:', error);
-        throw error;
-      }
-      
-      setSuccessMessage('Profile updated successfully!');
-      
-      // Update local state
-      setProfile({
-        ...profile,
+      // Use the updateUserProfile action from Redux
+      await dispatch(updateUserProfile({
         first_name: firstName,
         last_name: lastName,
         full_name: `${firstName} ${lastName}`,
-        bio: bio,
-      });
+        bio,
+      }));
+
+      setSuccessMessage('Profile updated successfully!');
     } catch (error) {
       console.error('Error saving profile:', error);
     } finally {
       setIsSaving(false);
-      
+
       // Clear success message after 3 seconds
       setTimeout(() => {
         setSuccessMessage('');
       }, 3000);
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -148,17 +67,17 @@ export default function SettingsPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold">Settings</h1>
           <p className="text-gray-600">Manage your account settings and preferences</p>
         </div>
-        
+
         <div className="flex flex-col gap-6 md:flex-row">
           {/* Sidebar */}
           <div className="w-full md:w-1/4">
@@ -182,7 +101,7 @@ export default function SettingsPage() {
                   <p className="text-sm text-gray-600">{profile?.email}</p>
                 </div>
               </div>
-              
+
               <nav>
                 <ul className="space-y-1">
                   <li>
@@ -255,7 +174,7 @@ export default function SettingsPage() {
               </nav>
             </div>
           </div>
-          
+
           {/* Main content */}
           <div className="flex-1">
             <div className="rounded-lg bg-white p-6 shadow">
@@ -265,12 +184,12 @@ export default function SettingsPage() {
                   {successMessage}
                 </div>
               )}
-              
+
               {/* General settings */}
               {activeTab === 'general' && (
                 <div>
                   <h2 className="mb-4 text-xl font-semibold">General Settings</h2>
-                  
+
                   <div className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2">
                       <div>
@@ -285,7 +204,7 @@ export default function SettingsPage() {
                           className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                         />
                       </div>
-                      
+
                       <div>
                         <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
                           Last Name
@@ -299,7 +218,7 @@ export default function SettingsPage() {
                         />
                       </div>
                     </div>
-                    
+
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                         Email
@@ -313,7 +232,7 @@ export default function SettingsPage() {
                       />
                       <p className="mt-1 text-xs text-gray-500">Email cannot be changed</p>
                     </div>
-                    
+
                     <div>
                       <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
                         Bio
@@ -327,7 +246,7 @@ export default function SettingsPage() {
                         placeholder="Tell us about yourself..."
                       />
                     </div>
-                    
+
                     <div className="pt-4">
                       <button
                         onClick={handleSaveProfile}
@@ -340,12 +259,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Security settings */}
               {activeTab === 'security' && (
                 <div>
                   <h2 className="mb-4 text-xl font-semibold">Security Settings</h2>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700">
@@ -357,7 +276,7 @@ export default function SettingsPage() {
                         className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div>
                       <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
                         New Password
@@ -368,7 +287,7 @@ export default function SettingsPage() {
                         className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div>
                       <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                         Confirm New Password
@@ -379,7 +298,7 @@ export default function SettingsPage() {
                         className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                       />
                     </div>
-                    
+
                     <div className="pt-4">
                       <button
                         className="rounded-md bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -387,13 +306,13 @@ export default function SettingsPage() {
                         Change Password
                       </button>
                     </div>
-                    
+
                     <hr className="my-6 border-gray-300" />
-                    
+
                     <div>
                       <h3 className="mb-2 text-lg font-medium">Two-Factor Authentication</h3>
                       <p className="mb-4 text-gray-600">Add an extra layer of security to your account</p>
-                      
+
                       <button
                         className="rounded-md bg-gray-200 px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                       >
@@ -403,12 +322,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Notifications settings */}
               {activeTab === 'notifications' && (
                 <div>
                   <h2 className="mb-4 text-xl font-semibold">Notification Settings</h2>
-                  
+
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
@@ -420,7 +339,7 @@ export default function SettingsPage() {
                         <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300"></div>
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-medium">Friend Requests</h3>
@@ -431,7 +350,7 @@ export default function SettingsPage() {
                         <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300"></div>
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-medium">Comments</h3>
@@ -442,7 +361,7 @@ export default function SettingsPage() {
                         <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300"></div>
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-medium">Likes</h3>
@@ -453,7 +372,7 @@ export default function SettingsPage() {
                         <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300"></div>
                       </label>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-medium">Messages</h3>
@@ -464,7 +383,7 @@ export default function SettingsPage() {
                         <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300"></div>
                       </label>
                     </div>
-                    
+
                     <div className="pt-4">
                       <button
                         className="rounded-md bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -475,12 +394,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Privacy settings */}
               {activeTab === 'privacy' && (
                 <div>
                   <h2 className="mb-4 text-xl font-semibold">Privacy Settings</h2>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <h3 className="mb-2 font-medium">Who can see your profile</h3>
@@ -490,7 +409,7 @@ export default function SettingsPage() {
                         <option>Only me</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <h3 className="mb-2 font-medium">Who can see your posts</h3>
                       <select className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500">
@@ -499,7 +418,7 @@ export default function SettingsPage() {
                         <option>Only me</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <h3 className="mb-2 font-medium">Who can send you friend requests</h3>
                       <select className="block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500">
@@ -508,7 +427,7 @@ export default function SettingsPage() {
                         <option>Nobody</option>
                       </select>
                     </div>
-                    
+
                     <div className="flex items-center justify-between">
                       <div>
                         <h3 className="font-medium">Profile Search</h3>
@@ -519,7 +438,7 @@ export default function SettingsPage() {
                         <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300"></div>
                       </label>
                     </div>
-                    
+
                     <div className="pt-4">
                       <button
                         className="rounded-md bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -530,12 +449,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Language settings */}
               {activeTab === 'language' && (
                 <div>
                   <h2 className="mb-4 text-xl font-semibold">Language Settings</h2>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label htmlFor="language" className="block text-sm font-medium text-gray-700">
@@ -558,7 +477,7 @@ export default function SettingsPage() {
                         <option value="hi">हिन्दी</option>
                       </select>
                     </div>
-                    
+
                     <div className="pt-4">
                       <button
                         className="rounded-md bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -569,12 +488,12 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Help & Support */}
               {activeTab === 'help' && (
                 <div>
                   <h2 className="mb-4 text-xl font-semibold">Help & Support</h2>
-                  
+
                   <div className="space-y-6">
                     <div>
                       <h3 className="mb-2 font-medium">Frequently Asked Questions</h3>
@@ -599,7 +518,7 @@ export default function SettingsPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <h3 className="mb-2 font-medium">Contact Support</h3>
                       <div className="space-y-4">
@@ -614,7 +533,7 @@ export default function SettingsPage() {
                             placeholder="What is your issue about?"
                           />
                         </div>
-                        
+
                         <div>
                           <label htmlFor="message" className="block text-sm font-medium text-gray-700">
                             Message
@@ -626,7 +545,7 @@ export default function SettingsPage() {
                             placeholder="Describe your issue in detail..."
                           />
                         </div>
-                        
+
                         <div className="pt-2">
                           <button
                             className="rounded-md bg-blue-600 px-4 py-2 text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"

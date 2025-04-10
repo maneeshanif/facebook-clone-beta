@@ -5,10 +5,23 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
 import { FaImage, FaVideo, FaSmile, FaTimes } from 'react-icons/fa';
+import EmojiPicker from './EmojiPicker';
+
+interface Post {
+  id: string;
+  user_id: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+  user: {
+    full_name: string;
+    avatar_url: string | null;
+  };
+}
 
 interface CreatePostCardProps {
   userId: string | null;
-  onPostCreated: (post: any) => void;
+  onPostCreated: (post: Post) => void;
 }
 
 interface Profile {
@@ -22,6 +35,8 @@ export default function CreatePostCard({ userId, onPostCreated }: CreatePostCard
   const [postContent, setPostContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [showFeelingPicker, setShowFeelingPicker] = useState(false);
+  const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -56,6 +71,10 @@ export default function CreatePostCard({ userId, onPostCreated }: CreatePostCard
       setImagePreviewUrl(reader.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setPostContent(prev => prev + emoji);
   };
 
   const handleSubmit = async () => {
@@ -150,7 +169,7 @@ export default function CreatePostCard({ userId, onPostCreated }: CreatePostCard
             onClick={() => setIsModalOpen(true)}
             className="flex-1 rounded-full bg-gray-100 px-4 py-2 text-left text-gray-500 hover:bg-gray-200"
           >
-            What's on your mind, {profile?.full_name?.split(' ')[0] || 'there'}?
+            What&apos;s on your mind, {profile?.full_name?.split(' ')[0] || 'there'}?
           </button>
         </div>
 
@@ -170,7 +189,13 @@ export default function CreatePostCard({ userId, onPostCreated }: CreatePostCard
             <span>Photo/Video</span>
           </button>
 
-          <button className="flex flex-1 items-center justify-center rounded-lg py-2 hover:bg-gray-100">
+          <button
+            onClick={() => {
+              setIsModalOpen(true);
+              setShowFeelingPicker(true);
+            }}
+            className="flex flex-1 items-center justify-center rounded-lg py-2 hover:bg-gray-100"
+          >
             <FaSmile className="mr-2 text-yellow-500" />
             <span>Feeling/Activity</span>
           </button>
@@ -205,42 +230,80 @@ export default function CreatePostCard({ userId, onPostCreated }: CreatePostCard
                     {profile ? getInitials(profile.full_name) : 'U'}
                   </div>
                 )}
-                <span className="ml-2 font-semibold">{profile?.full_name}</span>
+                <div className="ml-2">
+                  <span className="font-semibold">{profile?.full_name}</span>
+                  {selectedFeeling && (
+                    <span className="ml-1 text-gray-600">is feeling {selectedFeeling}</span>
+                  )}
+                </div>
               </div>
 
-              <textarea
-                value={postContent}
-                onChange={(e) => setPostContent(e.target.value)}
-                placeholder="What's on your mind?"
-                className="min-h-[150px] w-full resize-none rounded-lg border-none p-2 text-lg focus:outline-none"
-                autoFocus
-              />
+              <div className="relative">
+                <textarea
+                  value={postContent}
+                  onChange={(e) => setPostContent(e.target.value)}
+                  placeholder="What's on your mind?"
+                  className="min-h-[150px] w-full resize-none rounded-lg border-none p-2 text-lg focus:outline-none"
+                  autoFocus
+                />
+                <div className="absolute bottom-2 right-2">
+                  <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                </div>
+              </div>
 
               {/* Image preview */}
               {imagePreviewUrl && (
-                <div className="mt-4 relative">
-                  <img
+                <div className="mt-4 relative h-60 w-full">
+                  <Image
                     src={imagePreviewUrl}
                     alt="Preview"
-                    className="w-full rounded-lg max-h-60 object-contain"
+                    fill
+                    className="rounded-lg object-contain"
                   />
                   <button
                     onClick={() => {
                       setSelectedImage(null);
                       setImagePreviewUrl(null);
                     }}
-                    className="absolute top-2 right-2 bg-gray-800 bg-opacity-70 rounded-full p-1 text-white hover:bg-opacity-100"
+                    className="absolute top-2 right-2 z-10 bg-gray-800 bg-opacity-70 rounded-full p-1 text-white hover:bg-opacity-100"
                   >
                     <FaTimes size={16} />
                   </button>
                 </div>
               )}
 
+              {showFeelingPicker && (
+                <div className="mb-4 rounded-lg border border-gray-200 p-3">
+                  <h4 className="mb-2 font-medium">How are you feeling?</h4>
+                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    {['Happy', 'Sad', 'Excited', 'Angry', 'Loved', 'Thankful', 'Blessed', 'Tired', 'Motivated'].map((feeling) => (
+                      <button
+                        key={feeling}
+                        onClick={() => {
+                          setSelectedFeeling(feeling);
+                          setShowFeelingPicker(false);
+                        }}
+                        className={`rounded-md p-2 text-sm hover:bg-gray-100 ${selectedFeeling === feeling ? 'bg-blue-50 text-blue-600' : ''}`}
+                      >
+                        {feeling}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="mt-4 rounded-lg border border-gray-300 p-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-semibold">Add to your post</span>
+                  <div className="flex items-center">
+                    <span className="font-semibold">Add to your post</span>
+                    {selectedFeeling && (
+                      <span className="ml-2 rounded-md bg-blue-50 px-2 py-1 text-sm text-blue-600">
+                        Feeling {selectedFeeling}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex space-x-2">
-                    <label className="rounded-full p-2 hover:bg-gray-100 cursor-pointer">
+                    <label className="cursor-pointer rounded-full p-2 hover:bg-gray-100">
                       <FaImage className="text-green-500" size={20} />
                       <input
                         type="file"
@@ -252,7 +315,10 @@ export default function CreatePostCard({ userId, onPostCreated }: CreatePostCard
                     <button className="rounded-full p-2 hover:bg-gray-100">
                       <FaVideo className="text-red-500" size={20} />
                     </button>
-                    <button className="rounded-full p-2 hover:bg-gray-100">
+                    <button
+                      onClick={() => setShowFeelingPicker(!showFeelingPicker)}
+                      className={`rounded-full p-2 hover:bg-gray-100 ${showFeelingPicker || selectedFeeling ? 'bg-blue-50' : ''}`}
+                    >
                       <FaSmile className="text-yellow-500" size={20} />
                     </button>
                   </div>

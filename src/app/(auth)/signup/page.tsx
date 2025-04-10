@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/lib/supabase/client';
+import { FaGoogle } from 'react-icons/fa';
+import { getRedirectUrl } from '@/lib/auth-helpers';
 
 export default function SignupPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -103,13 +106,37 @@ export default function SignupPage() {
     }
   };
 
+  const handleGoogleSignUp = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: getRedirectUrl(),
+        },
+      });
+
+      if (error) {
+        console.error('Error signing up with Google:', error.message);
+        setError(error.message);
+      }
+    } catch (err) {
+      console.error('Unexpected error during Google sign up:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-blue-600">facebook</h1>
           <p className="mt-2 text-xl">Create a new account</p>
-          <p className="text-sm text-gray-600">It's quick and easy.</p>
+          <p className="text-sm text-gray-600">It&apos;s quick and easy.</p>
         </div>
 
         <div className="rounded-lg bg-white p-8 shadow-md">
@@ -226,6 +253,20 @@ export default function SignupPage() {
               {isLoading ? 'Signing up...' : 'Sign Up'}
             </button>
           </form>
+
+          <hr className="my-6 border-gray-300" />
+
+          <div className="mb-6 text-center">
+            <button
+              type="button"
+              onClick={handleGoogleSignUp}
+              disabled={isGoogleLoading}
+              className="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FaGoogle className="mr-2 text-red-600" />
+              {isGoogleLoading ? 'Signing up...' : 'Sign up with Google'}
+            </button>
+          </div>
 
           <hr className="my-6 border-gray-300" />
 

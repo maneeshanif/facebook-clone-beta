@@ -34,19 +34,19 @@ export default function MemoriesPage() {
   const [memories, setMemories] = useState<Memory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null);
-  
+
   useEffect(() => {
     const fetchMemories = async () => {
       setIsLoading(true);
-      
+
       // In a real app, we would fetch from Supabase
       // For now, we'll use mock data
-      
+
       // Get current date for "On This Day" memories
       const today = new Date();
       const currentMonth = today.getMonth() + 1;
       const currentDay = today.getDate();
-      
+
       // Mock memories data
       const mockMemories: Memory[] = [
         {
@@ -168,27 +168,27 @@ export default function MemoriesPage() {
           ],
         },
       ];
-      
+
       setMemories(mockMemories);
       setIsLoading(false);
     };
-    
+
     fetchMemories();
   }, []);
-  
+
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
     const diffYears = now.getFullYear() - date.getFullYear();
-    
+
     return `${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} · ${diffYears} ${diffYears === 1 ? 'year' : 'years'} ago`;
   };
-  
+
   const handleShareMemory = (memoryId: string) => {
     // In a real app, we would implement sharing functionality
     alert('Sharing functionality would be implemented here');
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -199,19 +199,19 @@ export default function MemoriesPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
+
       <div className="container mx-auto flex flex-1 px-4 py-6">
         <Sidebar className="sticky top-16 hidden w-1/5 lg:block" />
-        
-        <div className="w-full lg:w-4/5">
+
+        <div className="w-full px-0 sm:px-4 lg:w-4/5">
           {selectedMemory ? (
             <div>
               {/* Memory header */}
-              <div className="mb-6 rounded-lg bg-white p-6 shadow">
+              <div className="mb-6 rounded-lg bg-white p-4 shadow sm:p-6">
                 <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
                   <div>
                     <div className="flex items-center">
@@ -220,30 +220,31 @@ export default function MemoriesPage() {
                     </div>
                     <p className="mt-1 text-gray-600">{selectedMemory.description}</p>
                   </div>
-                  
-                  <div className="mt-4 flex space-x-2 md:mt-0">
+
+                  <div className="mt-4 flex flex-wrap gap-2 md:mt-0">
                     <button
                       onClick={() => handleShareMemory(selectedMemory.id)}
-                      className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+                      className="flex items-center rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-blue-700 sm:px-4 sm:py-2 sm:text-base"
                     >
-                      <FaShare className="mr-2" />
+                      <FaShare className="mr-1 sm:mr-2" />
                       Share
                     </button>
                     <button
                       onClick={() => setSelectedMemory(null)}
-                      className="rounded-md border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50"
+                      className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 sm:px-4 sm:py-2 sm:text-base"
                     >
-                      Back to Memories
+                      Back
+                      <span className="hidden sm:inline"> to Memories</span>
                     </button>
                   </div>
                 </div>
               </div>
-              
+
               {/* Memory posts */}
               <div className="space-y-4">
                 {selectedMemory.posts.map(post => (
-                  <div key={post.id} className="rounded-lg bg-white p-4 shadow">
-                    <div className="mb-3 flex items-center justify-between">
+                  <div key={post.id} className="rounded-lg bg-white p-3 shadow sm:p-4">
+                    <div className="mb-3 flex flex-wrap items-center justify-between">
                       <div className="flex items-center">
                         {post.user.avatar_url ? (
                           <Image
@@ -271,39 +272,41 @@ export default function MemoriesPage() {
                         <FaEllipsisH />
                       </button>
                     </div>
-                    
+
                     <div className="mb-3">
-                      <p className="whitespace-pre-line">{post.content}</p>
+                      <p className="break-words whitespace-pre-line text-sm sm:text-base">{post.content}</p>
                     </div>
-                    
+
                     {post.image_url && (
                       <div className="mb-3">
-                        <img
+                        <Image
                           src={post.image_url}
                           alt="Post image"
+                          width={800}
+                          height={600}
                           className="w-full rounded-lg"
                         />
                       </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between border-b border-t border-gray-200 py-2 text-sm text-gray-500">
                       <div>
                         {post.likes_count} likes • {post.comments_count} comments
                       </div>
                     </div>
-                    
-                    <div className="mt-2 flex">
-                      <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
-                        <FaThumbsUp className="mr-2" />
-                        Like
+
+                    <div className="mt-2 flex text-xs sm:text-sm">
+                      <button className="flex flex-1 items-center justify-center rounded-md py-1 hover:bg-gray-100 sm:py-2">
+                        <FaThumbsUp className="mr-1 sm:mr-2" />
+                        <span className="hidden xs:inline">Like</span>
                       </button>
-                      <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
-                        <FaComment className="mr-2" />
-                        Comment
+                      <button className="flex flex-1 items-center justify-center rounded-md py-1 hover:bg-gray-100 sm:py-2">
+                        <FaComment className="mr-1 sm:mr-2" />
+                        <span className="hidden xs:inline">Comment</span>
                       </button>
-                      <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
-                        <FaShare className="mr-2" />
-                        Share
+                      <button className="flex flex-1 items-center justify-center rounded-md py-1 hover:bg-gray-100 sm:py-2">
+                        <FaShare className="mr-1 sm:mr-2" />
+                        <span className="hidden xs:inline">Share</span>
                       </button>
                     </div>
                   </div>
@@ -316,8 +319,8 @@ export default function MemoriesPage() {
                 <h1 className="text-2xl font-bold">Memories</h1>
                 <p className="text-gray-600">Look back on your memories and milestones</p>
               </div>
-              
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+              <div className="grid grid-cols-1 gap-4 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
                 {memories.map(memory => (
                   <div
                     key={memory.id}
@@ -326,15 +329,17 @@ export default function MemoriesPage() {
                   >
                     {memory.posts[0]?.image_url ? (
                       <div className="relative h-48 w-full">
-                        <img
+                        <Image
                           src={memory.posts[0].image_url}
                           alt={memory.title}
+                          width={800}
+                          height={600}
                           className="h-full w-full object-cover"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
                         <div className="absolute bottom-4 left-4 right-4">
-                          <h2 className="text-xl font-bold text-white">{memory.title}</h2>
-                          <p className="text-sm text-white">{memory.description}</p>
+                          <h2 className="text-lg font-bold text-white sm:text-xl">{memory.title}</h2>
+                          <p className="text-xs text-white sm:text-sm">{memory.description}</p>
                         </div>
                       </div>
                     ) : (

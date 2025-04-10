@@ -37,7 +37,7 @@ export default function FundraisersPage() {
   const [selectedFundraiser, setSelectedFundraiser] = useState<Fundraiser | null>(null);
   const [donationAmount, setDonationAmount] = useState<number>(10);
   const [showDonationModal, setShowDonationModal] = useState(false);
-  
+
   const categories = [
     { id: 'all', name: 'All Categories' },
     { id: 'crisis', name: 'Crisis Relief' },
@@ -47,14 +47,14 @@ export default function FundraisersPage() {
     { id: 'animals', name: 'Animals' },
     { id: 'community', name: 'Community' },
   ];
-  
+
   useEffect(() => {
     const fetchFundraisers = async () => {
       setIsLoading(true);
-      
+
       // In a real app, we would fetch from Supabase
       // For now, we'll use mock data
-      
+
       // Mock fundraisers data
       const mockFundraisers: Fundraiser[] = [
         {
@@ -166,14 +166,14 @@ export default function FundraisersPage() {
           },
         },
       ];
-      
+
       setFundraisers(mockFundraisers);
       setIsLoading(false);
     };
-    
+
     fetchFundraisers();
   }, []);
-  
+
   const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -182,16 +182,16 @@ export default function FundraisersPage() {
       maximumFractionDigits: 0,
     }).format(amount);
   };
-  
+
   const calculateProgress = (current: number, goal: number): number => {
     return Math.min(Math.round((current / goal) * 100), 100);
   };
-  
+
   const formatTimeLeft = (endDate: string): string => {
     const end = new Date(endDate);
     const now = new Date();
     const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays <= 0) {
       return 'Ended';
     } else if (diffDays === 1) {
@@ -200,63 +200,63 @@ export default function FundraisersPage() {
       return `${diffDays} days left`;
     }
   };
-  
+
   const handleDonate = (fundraiserId: string) => {
     // Find the fundraiser
     const fundraiser = fundraisers.find(f => f.id === fundraiserId);
     if (!fundraiser) return;
-    
+
     setSelectedFundraiser(fundraiser);
     setShowDonationModal(true);
   };
-  
+
   const handleSubmitDonation = () => {
     if (!selectedFundraiser || donationAmount <= 0) return;
-    
+
     // In a real app, we would process the donation through a payment gateway
     // and update the database
     // For now, we'll just update the local state
-    
-    setFundraisers(prev => 
-      prev.map(fundraiser => 
-        fundraiser.id === selectedFundraiser.id 
-          ? { 
-              ...fundraiser, 
+
+    setFundraisers(prev =>
+      prev.map(fundraiser =>
+        fundraiser.id === selectedFundraiser.id
+          ? {
+              ...fundraiser,
               current_amount: fundraiser.current_amount + donationAmount,
               donors_count: fundraiser.donors_count + 1,
               is_donated: true
-            } 
+            }
           : fundraiser
       )
     );
-    
+
     setShowDonationModal(false);
     setDonationAmount(10);
-    
+
     // Show success message
     alert(`Thank you for your donation of ${formatCurrency(donationAmount)} to "${selectedFundraiser.title}"!`);
   };
-  
+
   const handleShareFundraiser = (fundraiserId: string) => {
     // In a real app, we would implement sharing functionality
     alert('Sharing functionality would be implemented here');
   };
-  
+
   const filteredFundraisers = fundraisers.filter(fundraiser => {
-    const matchesTab = 
+    const matchesTab =
       (activeTab === 'browse') ||
       (activeTab === 'manage' && fundraiser.organizer.id === 'user1') || // Assuming current user is user1
       (activeTab === 'donated' && fundraiser.is_donated);
-    
+
     const matchesCategory = activeCategory === 'all' || fundraiser.category === activeCategory;
-    
+
     const matchesSearch = fundraiser.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           fundraiser.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           fundraiser.organizer.full_name.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesTab && matchesCategory && matchesSearch;
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -267,27 +267,28 @@ export default function FundraisersPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
+
       <div className="container mx-auto flex flex-1 px-4 py-6">
         <Sidebar className="sticky top-16 hidden w-1/5 lg:block" />
-        
-        <div className="w-full lg:w-4/5">
+
+        <div className="w-full px-0 sm:px-4 lg:w-4/5">
           {selectedFundraiser && !showDonationModal ? (
             <div>
               {/* Fundraiser header */}
               <div className="mb-6 overflow-hidden rounded-lg bg-white shadow">
                 <div className="relative h-64 w-full">
-                  <img
+                  <Image
                     src={selectedFundraiser.cover_image}
                     alt={selectedFundraiser.title}
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
-                
+
                 <div className="p-6">
                   <div className="mb-4 flex flex-col items-start justify-between md:flex-row md:items-center">
                     <div>
@@ -301,7 +302,7 @@ export default function FundraisersPage() {
                       </div>
                       <h1 className="text-2xl font-bold">{selectedFundraiser.title}</h1>
                     </div>
-                    
+
                     <div className="mt-4 flex space-x-2 md:mt-0">
                       <button
                         onClick={() => handleDonate(selectedFundraiser.id)}
@@ -325,7 +326,7 @@ export default function FundraisersPage() {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div className="mb-6">
                     <div className="mb-2 flex items-end justify-between">
                       <div>
@@ -335,13 +336,13 @@ export default function FundraisersPage() {
                       <span className="text-sm text-gray-500">{selectedFundraiser.donors_count} donors</span>
                     </div>
                     <div className="h-4 w-full overflow-hidden rounded-full bg-gray-200">
-                      <div 
-                        className="h-full rounded-full bg-blue-600" 
+                      <div
+                        className="h-full rounded-full bg-blue-600"
                         style={{ width: `${calculateProgress(selectedFundraiser.current_amount, selectedFundraiser.goal_amount)}%` }}
                       ></div>
                     </div>
                   </div>
-                  
+
                   <div className="mb-6 flex items-center">
                     <div className="mr-3">
                       {selectedFundraiser.organizer.avatar_url ? (
@@ -365,14 +366,14 @@ export default function FundraisersPage() {
                       </Link>
                     </div>
                   </div>
-                  
+
                   <div>
                     <h2 className="mb-2 text-lg font-semibold">About this fundraiser</h2>
                     <p className="whitespace-pre-line text-gray-700">{selectedFundraiser.description}</p>
                   </div>
                 </div>
               </div>
-              
+
               {/* Recent donors */}
               <div className="rounded-lg bg-white p-6 shadow">
                 <h2 className="mb-4 text-lg font-semibold">Recent Donors</h2>
@@ -392,7 +393,7 @@ export default function FundraisersPage() {
                       <p className="text-sm text-gray-500">❤️ Sending love and support!</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 text-gray-700">
@@ -408,7 +409,7 @@ export default function FundraisersPage() {
                       <p className="text-sm text-gray-500">Happy to help!</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-300 text-gray-700">
@@ -433,7 +434,7 @@ export default function FundraisersPage() {
                   <h1 className="text-2xl font-bold">Fundraisers</h1>
                   <p className="text-gray-600">Support causes you care about</p>
                 </div>
-                
+
                 <div className="mt-4 md:mt-0">
                   <button className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
                     <FaPlus className="mr-2" />
@@ -441,7 +442,7 @@ export default function FundraisersPage() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="mb-6 flex flex-col gap-4 md:flex-row">
                 <div className="relative flex-1">
                   <input
@@ -453,7 +454,7 @@ export default function FundraisersPage() {
                   />
                   <FaSearch className="absolute left-3 top-3 text-gray-500" />
                 </div>
-                
+
                 <select
                   value={activeCategory}
                   onChange={(e) => setActiveCategory(e.target.value)}
@@ -466,7 +467,7 @@ export default function FundraisersPage() {
                   ))}
                 </select>
               </div>
-              
+
               <div className="mb-6 flex border-b border-gray-300">
                 <button
                   onClick={() => setActiveTab('browse')}
@@ -499,7 +500,7 @@ export default function FundraisersPage() {
                   Donated
                 </button>
               </div>
-              
+
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredFundraisers.length > 0 ? (
                   filteredFundraisers.map(fundraiser => (
@@ -511,10 +512,11 @@ export default function FundraisersPage() {
                         className="relative h-40 w-full cursor-pointer"
                         onClick={() => setSelectedFundraiser(fundraiser)}
                       >
-                        <img
+                        <Image
                           src={fundraiser.cover_image}
                           alt={fundraiser.title}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                         <div className="absolute bottom-2 left-2 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-800">
                           {categories.find(c => c.id === fundraiser.category)?.name || fundraiser.category}
@@ -530,15 +532,15 @@ export default function FundraisersPage() {
                         >
                           {fundraiser.title}
                         </h3>
-                        
+
                         <div className="mb-3">
                           <div className="mb-1 flex items-end justify-between text-sm">
                             <span className="font-semibold">{formatCurrency(fundraiser.current_amount)}</span>
                             <span className="text-gray-500">of {formatCurrency(fundraiser.goal_amount)}</span>
                           </div>
                           <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                            <div 
-                              className="h-full rounded-full bg-blue-600" 
+                            <div
+                              className="h-full rounded-full bg-blue-600"
                               style={{ width: `${calculateProgress(fundraiser.current_amount, fundraiser.goal_amount)}%` }}
                             ></div>
                           </div>
@@ -546,14 +548,14 @@ export default function FundraisersPage() {
                             {fundraiser.donors_count} donors
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center text-sm">
                           <div className="mr-2 flex h-6 w-6 items-center justify-center rounded-full bg-gray-300 text-xs text-gray-700">
                             {getInitials(fundraiser.organizer.full_name)}
                           </div>
                           <span className="text-gray-600">{fundraiser.organizer.full_name}</span>
                         </div>
-                        
+
                         <div className="mt-3 flex space-x-2">
                           <button
                             onClick={() => handleDonate(fundraiser.id)}
@@ -587,13 +589,13 @@ export default function FundraisersPage() {
           )}
         </div>
       </div>
-      
+
       {/* Donation Modal */}
       {showDonationModal && selectedFundraiser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-lg">
             <h2 className="mb-4 text-xl font-semibold">Donate to {selectedFundraiser.title}</h2>
-            
+
             <div className="mb-4">
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Donation Amount
@@ -624,7 +626,7 @@ export default function FundraisersPage() {
                 </div>
               </div>
             </div>
-            
+
             <div className="mb-4">
               <label className="mb-1 block text-sm font-medium text-gray-700">
                 Payment Method
@@ -635,7 +637,7 @@ export default function FundraisersPage() {
                 <option>Bank Transfer</option>
               </select>
             </div>
-            
+
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowDonationModal(false)}

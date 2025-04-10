@@ -6,9 +6,12 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { supabase } from '@/lib/supabase/client';
+import { FaGoogle } from 'react-icons/fa';
+import { getRedirectUrl } from '@/lib/auth-helpers';
 
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -58,6 +61,30 @@ export default function LoginPage() {
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: getRedirectUrl(),
+        },
+      });
+
+      if (error) {
+        console.error('Error signing in with Google:', error.message);
+        setError(error.message);
+      }
+    } catch (err) {
+      console.error('Unexpected error during Google sign in:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsGoogleLoading(false);
     }
   };
 
@@ -120,6 +147,20 @@ export default function LoginPage() {
             <Link href="/forgot-password" className="text-sm text-blue-600 hover:underline">
               Forgot Password?
             </Link>
+          </div>
+
+          <hr className="my-6 border-gray-300" />
+
+          <div className="mb-6 text-center">
+            <button
+              type="button"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading}
+              className="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <FaGoogle className="mr-2 text-red-600" />
+              {isGoogleLoading ? 'Signing in...' : 'Sign in with Google'}
+            </button>
           </div>
 
           <hr className="my-6 border-gray-300" />

@@ -40,14 +40,14 @@ export default function SavedPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewCollectionModal, setShowNewCollectionModal] = useState(false);
   const [newCollectionName, setNewCollectionName] = useState('');
-  
+
   useEffect(() => {
     const fetchSavedItems = async () => {
       setIsLoading(true);
-      
+
       // In a real app, we would fetch from Supabase
       // For now, we'll use mock data
-      
+
       // Mock saved items data
       const mockSavedItems: SavedItem[] = [
         {
@@ -135,7 +135,7 @@ export default function SavedPage() {
           },
         },
       ];
-      
+
       // Mock collections data
       const mockCollections: Collection[] = [
         {
@@ -157,20 +157,20 @@ export default function SavedPage() {
           created_at: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString(),
         },
       ];
-      
+
       setSavedItems(mockSavedItems);
       setCollections(mockCollections);
       setIsLoading(false);
     };
-    
+
     fetchSavedItems();
   }, []);
-  
+
   const formatTimeAgo = (timestamp: string): string => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffSeconds < 60) {
       return `${diffSeconds} seconds ago`;
     } else if (diffSeconds < 3600) {
@@ -187,7 +187,7 @@ export default function SavedPage() {
       return `${Math.floor(diffSeconds / 31536000)} years ago`;
     }
   };
-  
+
   const getItemTypeIcon = (type: string) => {
     switch (type) {
       case 'post':
@@ -204,16 +204,16 @@ export default function SavedPage() {
         return null;
     }
   };
-  
+
   const handleUnsaveItem = (itemId: string) => {
     // In a real app, we would update the saved status in Supabase
     // For now, we'll just update the local state
     setSavedItems(prev => prev.filter(item => item.id !== itemId));
   };
-  
+
   const handleCreateCollection = () => {
     if (!newCollectionName.trim()) return;
-    
+
     // In a real app, we would create the collection in Supabase
     // For now, we'll just update the local state
     const newCollection: Collection = {
@@ -222,24 +222,24 @@ export default function SavedPage() {
       items_count: 0,
       created_at: new Date().toISOString(),
     };
-    
+
     setCollections(prev => [...prev, newCollection]);
     setNewCollectionName('');
     setShowNewCollectionModal(false);
   };
-  
+
   const filteredItems = savedItems.filter(item => {
-    const matchesSearch = 
+    const matchesSearch =
       (item.title?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
       (item.content?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
       item.source.name.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     // If a collection is active, we would filter by collection
     // For now, we'll just return all items since we don't have collection assignments in our mock data
-    
+
     return matchesSearch;
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -250,21 +250,21 @@ export default function SavedPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
+
       <div className="container mx-auto flex flex-1 px-4 py-6">
         <Sidebar className="sticky top-16 hidden w-1/5 lg:block" />
-        
-        <div className="w-full lg:w-4/5">
+
+        <div className="w-full px-0 sm:px-4 lg:w-4/5">
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold">Saved Items</h1>
-              <p className="text-gray-600">Items you've saved for later</p>
+              <p className="text-gray-600">Items you&apos;ve saved for later</p>
             </div>
-            
+
             <div className="mt-4 md:mt-0">
               <button
                 onClick={() => setShowNewCollectionModal(true)}
@@ -275,7 +275,7 @@ export default function SavedPage() {
               </button>
             </div>
           </div>
-          
+
           <div className="mb-6 flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
               <input
@@ -288,11 +288,11 @@ export default function SavedPage() {
               <FaSearch className="absolute left-3 top-3 text-gray-500" />
             </div>
           </div>
-          
-          <div className="grid gap-6 md:grid-cols-4">
+
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-4">
             {/* Collections sidebar */}
             <div className="md:col-span-1">
-              <div className="rounded-lg bg-white p-4 shadow">
+              <div className="rounded-lg bg-white p-3 shadow sm:p-4">
                 <h2 className="mb-4 font-semibold">Collections</h2>
                 <ul className="space-y-2">
                   <li>
@@ -333,13 +333,13 @@ export default function SavedPage() {
                 </ul>
               </div>
             </div>
-            
+
             {/* Saved items */}
             <div className="md:col-span-3">
               <div className="space-y-4">
                 {filteredItems.length > 0 ? (
                   filteredItems.map(item => (
-                    <div key={item.id} className="rounded-lg bg-white p-4 shadow">
+                    <div key={item.id} className="rounded-lg bg-white p-3 shadow sm:p-4">
                       <div className="mb-3 flex items-center justify-between">
                         <div className="flex items-center">
                           {item.source.avatar_url ? (
@@ -380,9 +380,9 @@ export default function SavedPage() {
                           </button>
                         </div>
                       </div>
-                      
+
                       {item.title && (
-                        <h3 className="mb-2 text-lg font-semibold">
+                        <h3 className="mb-2 text-base font-semibold sm:text-lg">
                           {item.link ? (
                             <a href={item.link} className="hover:underline">
                               {item.title}
@@ -392,35 +392,37 @@ export default function SavedPage() {
                           )}
                         </h3>
                       )}
-                      
+
                       {item.content && (
                         <div className="mb-3">
-                          <p className="whitespace-pre-line">{item.content}</p>
+                          <p className="break-words whitespace-pre-line text-sm sm:text-base">{item.content}</p>
                         </div>
                       )}
-                      
+
                       {item.image_url && (
                         <div className="mb-3">
-                          <img
+                          <Image
                             src={item.image_url}
                             alt={item.title || 'Saved item'}
+                            width={800}
+                            height={600}
                             className="w-full rounded-lg"
                           />
                         </div>
                       )}
-                      
-                      <div className="mt-2 flex">
-                        <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
-                          <FaThumbsUp className="mr-2" />
-                          Like
+
+                      <div className="mt-2 flex text-xs sm:text-sm">
+                        <button className="flex flex-1 items-center justify-center rounded-md py-1 hover:bg-gray-100 sm:py-2">
+                          <FaThumbsUp className="mr-1 sm:mr-2" />
+                          <span className="hidden xs:inline">Like</span>
                         </button>
-                        <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
-                          <FaComment className="mr-2" />
-                          Comment
+                        <button className="flex flex-1 items-center justify-center rounded-md py-1 hover:bg-gray-100 sm:py-2">
+                          <FaComment className="mr-1 sm:mr-2" />
+                          <span className="hidden xs:inline">Comment</span>
                         </button>
-                        <button className="flex flex-1 items-center justify-center py-2 hover:bg-gray-100">
-                          <FaShare className="mr-2" />
-                          Share
+                        <button className="flex flex-1 items-center justify-center rounded-md py-1 hover:bg-gray-100 sm:py-2">
+                          <FaShare className="mr-1 sm:mr-2" />
+                          <span className="hidden xs:inline">Share</span>
                         </button>
                       </div>
                     </div>
@@ -441,7 +443,7 @@ export default function SavedPage() {
           </div>
         </div>
       </div>
-      
+
       {/* New Collection Modal */}
       {showNewCollectionModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">

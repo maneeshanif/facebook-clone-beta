@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
-import { FaSearch, FaMapMarkerAlt, FaPlus } from 'react-icons/fa';
+import { FaSearch, FaMapMarkerAlt, FaPlus, FaTimes, FaCamera } from 'react-icons/fa';
 
 interface Product {
   id: string;
@@ -30,7 +30,8 @@ export default function MarketplacePage() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  
+  const [showSellForm, setShowSellForm] = useState(false);
+
   const categories = [
     { id: 'all', name: 'All Categories' },
     { id: 'vehicles', name: 'Vehicles' },
@@ -41,14 +42,14 @@ export default function MarketplacePage() {
     { id: 'hobbies', name: 'Hobbies' },
     { id: 'garden', name: 'Garden' },
   ];
-  
+
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
-      
+
       // In a real app, we would fetch from Supabase
       // For now, we'll use mock data
-      
+
       // Mock products data
       const mockProducts: Product[] = [
         {
@@ -164,19 +165,19 @@ export default function MarketplacePage() {
           },
         },
       ];
-      
+
       setProducts(mockProducts);
       setIsLoading(false);
     };
-    
+
     fetchProducts();
   }, []);
-  
+
   const formatTimeAgo = (timestamp: string): string => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffSeconds < 60) {
       return `${diffSeconds} seconds ago`;
     } else if (diffSeconds < 3600) {
@@ -193,15 +194,15 @@ export default function MarketplacePage() {
       return `${Math.floor(diffSeconds / 31536000)} years ago`;
     }
   };
-  
+
   const filteredProducts = products.filter(product => {
     const matchesCategory = activeCategory === 'all' || product.category === activeCategory;
     const matchesSearch = product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesCategory && matchesSearch;
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -212,29 +213,32 @@ export default function MarketplacePage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
-      <div className="container mx-auto flex flex-1 px-4 py-6">
-        <Sidebar className="sticky top-16 hidden w-1/5 lg:block" />
-        
-        <div className="w-full lg:w-4/5">
+
+      <div className="container mx-auto flex flex-1 flex-col lg:flex-row px-4 py-6">
+        <Sidebar className="sticky top-16 hidden w-full lg:w-1/5 lg:block" />
+
+        <div className="w-full px-0 sm:px-4 lg:w-4/5 lg:pl-4">
           <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-2xl font-bold">Marketplace</h1>
               <p className="text-gray-600">Buy and sell items in your local area</p>
             </div>
-            
+
             <div className="mt-4 md:mt-0">
-              <button className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
+              <button
+                onClick={() => setShowSellForm(true)}
+                className="flex items-center rounded-md bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700"
+              >
                 <FaPlus className="mr-2" />
                 Sell Something
               </button>
             </div>
           </div>
-          
+
           <div className="mb-6 flex flex-col gap-4 md:flex-row">
             <div className="relative flex-1">
               <input
@@ -246,7 +250,7 @@ export default function MarketplacePage() {
               />
               <FaSearch className="absolute left-3 top-3 text-gray-500" />
             </div>
-            
+
             <select
               value={activeCategory}
               onChange={(e) => setActiveCategory(e.target.value)}
@@ -259,7 +263,7 @@ export default function MarketplacePage() {
               ))}
             </select>
           </div>
-          
+
           {selectedProduct ? (
             <div className="rounded-lg bg-white p-6 shadow">
               <div className="mb-4 flex justify-between">
@@ -271,16 +275,18 @@ export default function MarketplacePage() {
                   Back to listings
                 </button>
               </div>
-              
+
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <img
+                  <Image
                     src={selectedProduct.image_url}
                     alt={selectedProduct.title}
+                    width={800}
+                    height={600}
                     className="w-full rounded-lg object-cover"
                   />
                 </div>
-                
+
                 <div>
                   <div className="mb-4">
                     <h3 className="text-2xl font-bold text-green-600">${selectedProduct.price}</h3>
@@ -292,7 +298,7 @@ export default function MarketplacePage() {
                       Listed {formatTimeAgo(selectedProduct.created_at)}
                     </p>
                   </div>
-                  
+
                   <div className="mb-4">
                     <h4 className="font-semibold">Seller Information</h4>
                     <div className="mt-2 flex items-center">
@@ -316,7 +322,7 @@ export default function MarketplacePage() {
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <button className="w-full rounded-md bg-blue-600 py-2 font-semibold text-white hover:bg-blue-700">
                       Message Seller
@@ -327,7 +333,7 @@ export default function MarketplacePage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-6">
                 <h4 className="mb-2 font-semibold">Description</h4>
                 <p className="text-gray-700">
@@ -336,7 +342,7 @@ export default function MarketplacePage() {
               </div>
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {filteredProducts.length > 0 ? (
                 filteredProducts.map(product => (
                   <div
@@ -345,9 +351,11 @@ export default function MarketplacePage() {
                     onClick={() => setSelectedProduct(product)}
                   >
                     <div className="relative h-48">
-                      <img
+                      <Image
                         src={product.image_url}
                         alt={product.title}
+                        width={800}
+                        height={600}
                         className="h-full w-full object-cover"
                       />
                     </div>
@@ -369,6 +377,108 @@ export default function MarketplacePage() {
             </div>
           )}
         </div>
+
+        {/* Sell Form Modal */}
+        {showSellForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50 p-4">
+            <div className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 sm:p-6 shadow-lg">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-bold">Sell Something</h2>
+                <button
+                  onClick={() => setShowSellForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+
+              <form className="space-y-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Title</label>
+                  <input
+                    type="text"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    placeholder="What are you selling?"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Price</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2">$</span>
+                    <input
+                      type="number"
+                      className="w-full rounded-md border border-gray-300 px-3 py-2 pl-6 focus:border-blue-500 focus:outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Category</label>
+                  <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none">
+                    {categories.filter(cat => cat.id !== 'all').map(category => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Condition</label>
+                  <select className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none">
+                    <option value="new">New</option>
+                    <option value="like-new">Like New</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+                    rows={3}
+                    placeholder="Describe what you're selling"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-gray-700">Photos</label>
+                  <label className="flex cursor-pointer items-center justify-center rounded-md border-2 border-dashed border-gray-300 p-6 hover:bg-gray-50">
+                    <input type="file" className="hidden" accept="image/*" multiple />
+                    <div className="text-center">
+                      <FaCamera className="mx-auto h-8 w-8 text-gray-400" />
+                      <p className="mt-1 text-sm text-gray-500">Click to add photos</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowSellForm(false)}
+                    className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      alert('Your item has been listed! (This is a demo)');
+                      setShowSellForm(false);
+                    }}
+                    className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    List Item
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

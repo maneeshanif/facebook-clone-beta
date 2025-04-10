@@ -182,7 +182,7 @@ export default function StoriesSection() {
 
   return (
     <div className="relative">
-      <div className="flex space-x-2 overflow-x-auto pb-2">
+      <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
         {/* Create story card */}
         <div
           onClick={handleCreateStory}
@@ -291,7 +291,7 @@ export default function StoriesSection() {
                     const input = document.createElement('input');
                     input.type = 'file';
                     input.accept = 'image/*';
-                    input.onchange = (e) => {
+                    input.onchange = () => {
                       // In a real app, you would upload the image to Supabase Storage
                       // For now, we'll just show a message
                       alert('Image upload functionality would be implemented in a real app');

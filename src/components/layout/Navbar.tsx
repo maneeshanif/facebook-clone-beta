@@ -1,47 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
-import { FaFacebook, FaSearch, FaHome, FaUserFriends, FaVideo, FaStore, FaGamepad } from 'react-icons/fa';
+import { FaFacebook, FaSearch, FaHome, FaUserFriends, FaVideo, FaStore, FaGamepad, FaHandHoldingHeart } from 'react-icons/fa';
 import { BsMessenger } from 'react-icons/bs';
 import NotificationsDropdown from './NotificationsDropdown';
 import { getInitials } from '@/lib/utils';
+import { useSelector } from 'react-redux';
 
-interface Profile {
-  id: string;
-  first_name: string;
-  last_name: string;
-  full_name: string;
-  avatar_url: string | null;
-}
+// Using profile from Redux state
+
+import { RootState } from '@/redux/store';
 
 export default function Navbar() {
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { profile } = useSelector((state: RootState) => state.user);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!error && data) {
-          setProfile(data);
-        }
-      }
-    };
-
-    fetchProfile();
-  }, []);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -94,6 +71,11 @@ export default function Navbar() {
                 <FaGamepad size={25} />
               </Link>
             </li>
+            <li className="rounded-lg px-10 py-2 hover:bg-gray-100">
+              <Link href="/fundraisers" className="text-gray-600">
+                <FaHandHoldingHeart size={25} />
+              </Link>
+            </li>
           </ul>
         </nav>
 
@@ -125,12 +107,18 @@ export default function Navbar() {
 
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
-                <Link
-                  href={`/profile/${profile?.id}`}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Your Profile
-                </Link>
+                {profile?.id ? (
+                  <Link
+                    href={`/profile/${profile.id}`}
+                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    Your Profile
+                  </Link>
+                ) : (
+                  <span className="block px-4 py-2 text-sm text-gray-400">
+                    Your Profile
+                  </span>
+                )}
                 <Link
                   href="/settings"
                   className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

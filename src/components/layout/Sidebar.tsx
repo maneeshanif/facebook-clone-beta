@@ -1,51 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabase/client';
 import { cn, getInitials } from '@/lib/utils';
-import { FaUserFriends, FaStore, FaVideo, FaCalendarAlt, FaBookmark, FaFlag, FaGamepad } from 'react-icons/fa';
+import { FaUserFriends, FaStore, FaVideo, FaCalendarAlt, FaBookmark, FaFlag, FaGamepad, FaBriefcase, FaHandHoldingHeart } from 'react-icons/fa';
 import { BsPeopleFill, BsClockHistory } from 'react-icons/bs';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 interface SidebarProps {
   className?: string;
 }
 
-interface Profile {
-  id: string;
-  full_name: string;
-  avatar_url: string | null;
-}
-
 export default function Sidebar({ className }: SidebarProps) {
-  const [profile, setProfile] = useState<Profile | null>(null);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url')
-          .eq('id', session.user.id)
-          .single();
-
-        if (!error && data) {
-          setProfile(data);
-        }
-      }
-    };
-
-    fetchProfile();
-  }, []);
+  const { profile } = useSelector((state: RootState) => state.user);
 
   return (
     <aside className={cn("rounded-lg bg-white p-4 shadow", className)}>
       <nav>
         <ul className="space-y-2">
-          {profile && (
+          {profile?.id ? (
             <li>
               <Link
                 href={`/profile/${profile.id}`}
@@ -67,7 +41,7 @@ export default function Sidebar({ className }: SidebarProps) {
                 <span className="font-medium">{profile.full_name}</span>
               </Link>
             </li>
-          )}
+          ) : null}
 
           <li>
             <Link
@@ -96,6 +70,16 @@ export default function Sidebar({ className }: SidebarProps) {
             >
               <FaStore className="mr-3 text-blue-600" size={24} />
               <span>Marketplace</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              href="/jobs"
+              className="flex items-center rounded-lg p-2 hover:bg-gray-100"
+            >
+              <FaBriefcase className="mr-3 text-blue-600" size={24} />
+              <span>Jobs</span>
             </Link>
           </li>
 
@@ -146,6 +130,16 @@ export default function Sidebar({ className }: SidebarProps) {
             >
               <FaBookmark className="mr-3 text-blue-600" size={24} />
               <span>Saved</span>
+            </Link>
+          </li>
+
+          <li>
+            <Link
+              href="/fundraisers"
+              className="flex items-center rounded-lg p-2 hover:bg-gray-100"
+            >
+              <FaHandHoldingHeart className="mr-3 text-blue-600" size={24} />
+              <span>Fundraisers</span>
             </Link>
           </li>
 

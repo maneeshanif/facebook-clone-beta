@@ -2,12 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { supabase } from '@/lib/supabase/client';
 import { getInitials } from '@/lib/utils';
 import Navbar from '@/components/layout/Navbar';
 import Sidebar from '@/components/layout/Sidebar';
-import { FaSearch, FaGamepad, FaPlay, FaBookmark, FaEllipsisH, FaUsers } from 'react-icons/fa';
+import { FaSearch, FaPlay, FaBookmark } from 'react-icons/fa';
 
 interface Game {
   id: string;
@@ -42,14 +40,14 @@ export default function GamingPage() {
   const [activeTab, setActiveTab] = useState<'all' | 'played' | 'saved'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-  
+
   useEffect(() => {
     const fetchGamesAndStreams = async () => {
       setIsLoading(true);
-      
+
       // In a real app, we would fetch from Supabase
       // For now, we'll use mock data
-      
+
       // Mock games data
       const mockGames: Game[] = [
         {
@@ -113,7 +111,7 @@ export default function GamingPage() {
           is_played: true,
         },
       ];
-      
+
       // Mock streams data
       const mockStreams: GameStream[] = [
         {
@@ -159,15 +157,15 @@ export default function GamingPage() {
           },
         },
       ];
-      
+
       setGames(mockGames);
       setStreams(mockStreams);
       setIsLoading(false);
     };
-    
+
     fetchGamesAndStreams();
   }, []);
-  
+
   const formatPlayersCount = (count: number): string => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M players`;
@@ -177,7 +175,7 @@ export default function GamingPage() {
       return `${count} players`;
     }
   };
-  
+
   const formatViewersCount = (count: number): string => {
     if (count >= 1000000) {
       return `${(count / 1000000).toFixed(1)}M viewers`;
@@ -187,12 +185,12 @@ export default function GamingPage() {
       return `${count} viewers`;
     }
   };
-  
+
   const formatTimeAgo = (timestamp: string): string => {
     const date = new Date(timestamp);
     const now = new Date();
     const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
+
     if (diffSeconds < 60) {
       return `${diffSeconds} seconds ago`;
     } else if (diffSeconds < 3600) {
@@ -203,50 +201,50 @@ export default function GamingPage() {
       return `${Math.floor(diffSeconds / 86400)} days ago`;
     }
   };
-  
+
   const handleSaveGame = (gameId: string) => {
     // In a real app, we would update the saved status in Supabase
     // For now, we'll just update the local state
-    setGames(prev => 
-      prev.map(game => 
-        game.id === gameId 
-          ? { ...game, is_saved: !game.is_saved } 
+    setGames(prev =>
+      prev.map(game =>
+        game.id === gameId
+          ? { ...game, is_saved: !game.is_saved }
           : game
       )
     );
   };
-  
+
   const handlePlayGame = (gameId: string) => {
     // In a real app, we would update the played status in Supabase and redirect to the game
     // For now, we'll just update the local state
-    setGames(prev => 
-      prev.map(game => 
-        game.id === gameId 
-          ? { ...game, is_played: true } 
+    setGames(prev =>
+      prev.map(game =>
+        game.id === gameId
+          ? { ...game, is_played: true }
           : game
       )
     );
-    
+
     // Find the game and set it as selected
     const game = games.find(g => g.id === gameId);
     if (game) {
       setSelectedGame(game);
     }
   };
-  
+
   const filteredGames = games.filter(game => {
-    const matchesTab = 
+    const matchesTab =
       activeTab === 'all' ||
       (activeTab === 'played' && game.is_played) ||
       (activeTab === 'saved' && game.is_saved);
-    
+
     const matchesSearch = game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           game.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           game.category.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesTab && matchesSearch;
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen flex-col">
@@ -257,24 +255,25 @@ export default function GamingPage() {
       </div>
     );
   }
-  
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-100">
       <Navbar />
-      
+
       <div className="container mx-auto flex flex-1 px-4 py-6">
         <Sidebar className="sticky top-16 hidden w-1/5 lg:block" />
-        
-        <div className="w-full lg:w-4/5">
+
+        <div className="w-full px-0 sm:px-4 lg:w-4/5">
           {selectedGame ? (
             <div>
               {/* Game header */}
               <div className="mb-6 overflow-hidden rounded-lg bg-white shadow">
                 <div className="relative h-64 w-full">
-                  <img
+                  <Image
                     src={selectedGame.cover_image}
                     alt={selectedGame.title}
-                    className="h-full w-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-30"></div>
                   <div className="absolute bottom-4 left-4 right-4">
@@ -282,13 +281,13 @@ export default function GamingPage() {
                     <p className="text-white">{selectedGame.category} • {formatPlayersCount(selectedGame.players_count)}</p>
                   </div>
                 </div>
-                
+
                 <div className="p-6">
                   <div className="flex flex-col items-start justify-between md:flex-row md:items-center">
                     <div className="flex-1">
                       <p className="text-gray-700">{selectedGame.description}</p>
                     </div>
-                    
+
                     <div className="mt-4 flex space-x-2 md:mt-0 md:ml-4">
                       <button
                         onClick={() => handlePlayGame(selectedGame.id)}
@@ -297,7 +296,7 @@ export default function GamingPage() {
                         <FaPlay className="mr-2" />
                         Play Now
                       </button>
-                      
+
                       <button
                         onClick={() => handleSaveGame(selectedGame.id)}
                         className={`flex items-center rounded-md px-4 py-2 font-semibold ${
@@ -309,7 +308,7 @@ export default function GamingPage() {
                         <FaBookmark className="mr-2" />
                         {selectedGame.is_saved ? 'Saved' : 'Save'}
                       </button>
-                      
+
                       <button
                         onClick={() => setSelectedGame(null)}
                         className="rounded-md border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-700 hover:bg-gray-50"
@@ -320,7 +319,7 @@ export default function GamingPage() {
                   </div>
                 </div>
               </div>
-              
+
               {/* Game streams */}
               <div className="mb-6">
                 <h2 className="mb-4 text-xl font-semibold">Live Streams</h2>
@@ -334,10 +333,11 @@ export default function GamingPage() {
                           className="overflow-hidden rounded-lg bg-white shadow transition-transform hover:scale-105"
                         >
                           <div className="relative h-40 w-full">
-                            <img
+                            <Image
                               src={stream.thumbnail}
                               alt={stream.title}
-                              className="h-full w-full object-cover"
+                              fill
+                              className="object-cover"
                             />
                             <div className="absolute bottom-2 left-2 rounded bg-red-600 bg-opacity-90 px-2 py-1 text-xs text-white">
                               LIVE
@@ -381,7 +381,7 @@ export default function GamingPage() {
                   )}
                 </div>
               </div>
-              
+
               {/* Similar games */}
               <div>
                 <h2 className="mb-4 text-xl font-semibold">Similar Games</h2>
@@ -398,10 +398,11 @@ export default function GamingPage() {
                           className="relative h-40 w-full cursor-pointer"
                           onClick={() => setSelectedGame(game)}
                         >
-                          <img
+                          <Image
                             src={game.cover_image}
                             alt={game.title}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                         <div className="p-4">
@@ -414,7 +415,7 @@ export default function GamingPage() {
                               {game.category} • {formatPlayersCount(game.players_count)}
                             </p>
                           </div>
-                          
+
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handlePlayGame(game.id)}
@@ -447,7 +448,7 @@ export default function GamingPage() {
                   <p className="text-gray-600">Play games and watch gaming content</p>
                 </div>
               </div>
-              
+
               <div className="mb-6 flex flex-col gap-4 md:flex-row">
                 <div className="relative flex-1">
                   <input
@@ -460,7 +461,7 @@ export default function GamingPage() {
                   <FaSearch className="absolute left-3 top-3 text-gray-500" />
                 </div>
               </div>
-              
+
               <div className="mb-6 flex border-b border-gray-300">
                 <button
                   onClick={() => setActiveTab('all')}
@@ -493,7 +494,7 @@ export default function GamingPage() {
                   Saved Games
                 </button>
               </div>
-              
+
               {/* Live Streams */}
               {activeTab === 'all' && (
                 <div className="mb-8">
@@ -505,10 +506,11 @@ export default function GamingPage() {
                         className="overflow-hidden rounded-lg bg-white shadow transition-transform hover:scale-105"
                       >
                         <div className="relative h-40 w-full">
-                          <img
+                          <Image
                             src={stream.thumbnail}
                             alt={stream.title}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                           <div className="absolute bottom-2 left-2 rounded bg-red-600 bg-opacity-90 px-2 py-1 text-xs text-white">
                             LIVE
@@ -548,11 +550,11 @@ export default function GamingPage() {
                   </div>
                 </div>
               )}
-              
+
               {/* Games Grid */}
               <div>
                 <h2 className="mb-4 text-xl font-semibold">
-                  {activeTab === 'all' ? 'All Games' : 
+                  {activeTab === 'all' ? 'All Games' :
                    activeTab === 'played' ? 'Recently Played' : 'Saved Games'}
                 </h2>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -566,10 +568,11 @@ export default function GamingPage() {
                           className="relative h-40 w-full cursor-pointer"
                           onClick={() => setSelectedGame(game)}
                         >
-                          <img
+                          <Image
                             src={game.cover_image}
                             alt={game.title}
-                            className="h-full w-full object-cover"
+                            fill
+                            className="object-cover"
                           />
                         </div>
                         <div className="p-4">
@@ -582,7 +585,7 @@ export default function GamingPage() {
                               {game.category} • {formatPlayersCount(game.players_count)}
                             </p>
                           </div>
-                          
+
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handlePlayGame(game.id)}
